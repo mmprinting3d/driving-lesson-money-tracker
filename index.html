@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driving Budget & Business Tracker</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --maaser-color: #e67e22;
+            --savings-color: #27ae60;
+            --lesson-color: #9b59b6;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: var(--primary);
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            max-width: 480px;
+            width: 100%;
+        }
+
+        h1 { 
+            text-align: center; 
+            font-size: 1.6rem; 
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .tabs {
+            display: flex;
+            background: #eee;
+            padding: 5px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 5px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #777;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--accent);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .settings-box { display: none; }
+
+        .input-section {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label { 
+            font-weight: 600; 
+            font-size: 0.85rem; 
+            margin-bottom: 6px;
+            color: #555;
+        }
+
+        input {
+            padding: 14px;
+            border: 2px solid #edf2f7;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus { border-color: var(--accent); }
+
+        .results-grid {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border-left: 6px solid #ddd;
+        }
+
+        .card.maaser { border-left-color: var(--maaser-color); }
+        .card.savings { border-left-color: var(--savings-color); }
+        .card.available { border-left-color: var(--lesson-color); background: #fdfaff; }
+
+        .card-label { font-weight: 500; font-size: 0.9rem; }
+        .card-value { font-weight: 800; font-size: 1.1rem; }
+
+        .summary-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: #eff6ff;
+            border-radius: 12px;
+            border: 1px solid #dbeafe;
+            text-align: center;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .summary-box strong { color: var(--accent); font-size: 1.1rem; }
+
+        .hidden { display: none; }
+
+        @media (max-width: 400px) {
+            .container { padding: 1.2rem; }
+            .tab-btn { font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Driving Budget Planner</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-weekly" onclick="setMode('weekly')">Weekly</button>
+        <button class="tab-btn" id="tab-monthly" onclick="setMode('monthly')">Monthly</button>
+        <button class="tab-btn" id="tab-total" onclick="setMode('total')">Total Balance</button>
+    </div>
+
+    <!-- Hidden settings for logic -->
+    <div class="settings-box">
+        <input type="checkbox" id="double-toggle" checked>
+    </div>
+
+    <!-- Forms -->
+    <div id="weekly-form" class="input-section">
+        <div class="input-group">
+            <label for="weekly-hours">Job Hours Worked</label>
+            <input type="number" id="weekly-hours" value="7" oninput="runCalc()">
+        </div>
+        <div class="input-group">
+            <label for="weekly-wage">Hourly Wage (₪)</label>
+            <input type="number" id="weekly-wage" value="43.2" step="0.1" oninput="runCalc()">
+        </div>
+    </div>
+
+    <div id="monthly-form" class="input-section hidden">
+        <div class="input-group">
+            <label for="monthly-job">Monthly Job Income (₪)</label>
+            <input type="number" id="monthly-job" value="1310" oninput="runCalc()">
+        </div>
+        <div class="input-group">
+            <label for="monthly-biz">3D Printing Income (₪)</label>
+            <input type="number" id="monthly-biz" value="300" oninput="runCalc()">
+        </div>
+    </div>
+
+    <div id="total-form" class="input-section hidden">
+        <div class="input-group">
+            <label for="total-amount">Enter Total Amount (₪)</label>
+            <input type="number" id="total-amount" value="1217.3" oninput="runCalc()">
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="results-grid" id="standard-results">
+        <div class="card maaser">
+            <span class="card-label">Ma'aser (10%)</span>
+            <span class="card-value" id="val-maaser">₪0.00</span>
+        </div>
+        <div class="card savings">
+            <span class="card-label">Savings (20%)</span>
+            <span class="card-value" id="val-savings">₪0.00</span>
+        </div>
+        <div class="card available">
+            <span class="card-label">Lesson Fund</span>
+            <span class="card-value" id="val-lessons">₪0.00</span>
+        </div>
+    </div>
+
+    <div class="summary-box" id="summary">
+        Loading...
+    </div>
+</div>
+
+<script>
+    let mode = 'weekly';
+    const DOUBLE_LESSON_COST = 370;
+
+    function setMode(newMode) {
+        mode = newMode;
+        document.getElementById('tab-weekly').classList.toggle('active', mode === 'weekly');
+        document.getElementById('tab-monthly').classList.toggle('active', mode === 'monthly');
+        document.getElementById('tab-total').classList.toggle('active', mode === 'total');
+        
+        document.getElementById('weekly-form').classList.toggle('hidden', mode !== 'weekly');
+        document.getElementById('monthly-form').classList.toggle('hidden', mode !== 'monthly');
+        document.getElementById('total-form').classList.toggle('hidden', mode !== 'total');
+
+        document.getElementById('standard-results').classList.toggle('hidden', mode === 'total');
+        runCalc();
+    }
+
+    function runCalc() {
+        let jobIncome = 0;
+        let bizIncome = 0;
+        let available = 0;
+
+        if (mode === 'weekly') {
+            const hours = parseFloat(document.getElementById('weekly-hours').value) || 0;
+            const wage = parseFloat(document.getElementById('weekly-wage').value) || 0;
+            jobIncome = hours * wage;
+            available = jobIncome - (jobIncome * 0.10) - (jobIncome * 0.20);
+            
+            document.getElementById('val-maaser').innerText = `₪${(jobIncome * 0.10).toFixed(2)}`;
+            document.getElementById('val-savings').innerText = `₪${(jobIncome * 0.20).toFixed(2)}`;
+            document.getElementById('val-lessons').innerText = `₪${available.toFixed(2)}`;
+        } else if (mode === 'monthly') {
+            jobIncome = parseFloat(document.getElementById('monthly-job').value) || 0;
+            bizIncome = parseFloat(document.getElementById('monthly-biz').value) || 0;
+            const maaser = jobIncome * 0.10;
+            const savings = (jobIncome + bizIncome) * 0.20;
+            available = (jobIncome + bizIncome) - maaser - savings;
+            
+            document.getElementById('val-maaser').innerText = `₪${maaser.toFixed(2)}`;
+            document.getElementById('val-savings').innerText = `₪${savings.toFixed(2)}`;
+            document.getElementById('val-lessons').innerText = `₪${available.toFixed(2)}`;
+        } else if (mode === 'total') {
+            available = parseFloat(document.getElementById('total-amount').value) || 0;
+        }
+
+        const summaryDiv = document.getElementById('summary');
+
+        if (available >= DOUBLE_LESSON_COST) {
+            const count = Math.floor(available / DOUBLE_LESSON_COST);
+            const leftover = available % DOUBLE_LESSON_COST;
+            summaryDiv.innerHTML = `You can afford <strong>${count} Double Lesson(s)</strong>.<br>Leftover: ₪${leftover.toFixed(2)}`;
+        } else {
+            const gap = DOUBLE_LESSON_COST - available;
+            summaryDiv.innerHTML = `You are <strong>₪${gap.toFixed(2)} short</strong> for a double lesson.`;
+        }
+    }
+
+    window.onload = runCalc;
+</script>
+
+</body>
+</html>
