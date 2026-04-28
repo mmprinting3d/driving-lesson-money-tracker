@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Driving Budget & Business Tracker</title>
+    <!-- Favicon Emoji -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤑</text></svg>">
     <style>
         :root {
             --primary: #2c3e50;
@@ -69,8 +71,6 @@
             color: var(--accent);
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
-
-        .settings-box { display: none; }
 
         .input-section {
             display: grid;
@@ -156,38 +156,33 @@
         <button class="tab-btn" id="tab-total" onclick="setMode('total')">Total Balance</button>
     </div>
 
-    <!-- Hidden settings for logic -->
-    <div class="settings-box">
-        <input type="checkbox" id="double-toggle" checked>
-    </div>
-
     <!-- Forms -->
     <div id="weekly-form" class="input-section">
         <div class="input-group">
             <label for="weekly-hours">Job Hours Worked</label>
-            <input type="number" id="weekly-hours" value="7" oninput="runCalc()">
+            <input type="number" id="weekly-hours" value="21" oninput="runCalc()">
         </div>
         <div class="input-group">
             <label for="weekly-wage">Hourly Wage (₪)</label>
-            <input type="number" id="weekly-wage" value="43.2" step="0.1" oninput="runCalc()">
+            <input type="number" id="weekly-wage" value="35" step="0.1" oninput="runCalc()">
         </div>
     </div>
 
     <div id="monthly-form" class="input-section hidden">
         <div class="input-group">
             <label for="monthly-job">Monthly Job Income (₪)</label>
-            <input type="number" id="monthly-job" value="1310" oninput="runCalc()">
+            <input type="number" id="monthly-job" value="2940" oninput="runCalc()">
         </div>
         <div class="input-group">
-            <label for="monthly-biz">3D Printing Income (₪)</label>
-            <input type="number" id="monthly-biz" value="300" oninput="runCalc()">
+            <label for="monthly-biz">3D Printing Business Profit (₪)</label>
+            <input type="number" id="monthly-biz" value="300" placeholder="Enter sales profit" oninput="runCalc()">
         </div>
     </div>
 
     <div id="total-form" class="input-section hidden">
         <div class="input-group">
             <label for="total-amount">Enter Total Amount (₪)</label>
-            <input type="number" id="total-amount" value="1217.3" oninput="runCalc()">
+            <input type="number" id="total-amount" value="1000" oninput="runCalc()">
         </div>
     </div>
 
@@ -198,7 +193,7 @@
             <span class="card-value" id="val-maaser">₪0.00</span>
         </div>
         <div class="card savings">
-            <span class="card-label">Savings (20%)</span>
+            <span class="card-label">Savings (14%)</span>
             <span class="card-value" id="val-savings">₪0.00</span>
         </div>
         <div class="card available">
@@ -215,6 +210,8 @@
 <script>
     let mode = 'weekly';
     const DOUBLE_LESSON_COST = 370;
+    const MAASER_RATE = 0.10;
+    const SAVINGS_RATE = 0.14; 
 
     function setMode(newMode) {
         mode = newMode;
@@ -231,31 +228,35 @@
     }
 
     function runCalc() {
-        let jobIncome = 0;
-        let bizIncome = 0;
+        let totalIncome = 0;
         let available = 0;
+        let maaser = 0;
+        let savings = 0;
 
         if (mode === 'weekly') {
             const hours = parseFloat(document.getElementById('weekly-hours').value) || 0;
             const wage = parseFloat(document.getElementById('weekly-wage').value) || 0;
-            jobIncome = hours * wage;
-            available = jobIncome - (jobIncome * 0.10) - (jobIncome * 0.20);
+            totalIncome = hours * wage;
             
-            document.getElementById('val-maaser').innerText = `₪${(jobIncome * 0.10).toFixed(2)}`;
-            document.getElementById('val-savings').innerText = `₪${(jobIncome * 0.20).toFixed(2)}`;
-            document.getElementById('val-lessons').innerText = `₪${available.toFixed(2)}`;
+            maaser = totalIncome * MAASER_RATE;
+            savings = totalIncome * SAVINGS_RATE;
+            available = totalIncome - maaser - savings;
         } else if (mode === 'monthly') {
-            jobIncome = parseFloat(document.getElementById('monthly-job').value) || 0;
-            bizIncome = parseFloat(document.getElementById('monthly-biz').value) || 0;
-            const maaser = jobIncome * 0.10;
-            const savings = (jobIncome + bizIncome) * 0.20;
-            available = (jobIncome + bizIncome) - maaser - savings;
+            const jobIncome = parseFloat(document.getElementById('monthly-job').value) || 0;
+            const bizIncome = parseFloat(document.getElementById('monthly-biz').value) || 0;
+            totalIncome = jobIncome + bizIncome;
             
+            maaser = totalIncome * MAASER_RATE;
+            savings = totalIncome * SAVINGS_RATE;
+            available = totalIncome - maaser - savings;
+        } else if (mode === 'total') {
+            available = parseFloat(document.getElementById('total-amount').value) || 0;
+        }
+
+        if (mode !== 'total') {
             document.getElementById('val-maaser').innerText = `₪${maaser.toFixed(2)}`;
             document.getElementById('val-savings').innerText = `₪${savings.toFixed(2)}`;
             document.getElementById('val-lessons').innerText = `₪${available.toFixed(2)}`;
-        } else if (mode === 'total') {
-            available = parseFloat(document.getElementById('total-amount').value) || 0;
         }
 
         const summaryDiv = document.getElementById('summary');
