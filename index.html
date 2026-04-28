@@ -193,7 +193,7 @@
             <span class="card-value" id="val-maaser">₪0.00</span>
         </div>
         <div class="card savings">
-            <span class="card-label">Savings (14%)</span>
+            <span class="card-label">Savings (Car) (30%)</span>
             <span class="card-value" id="val-savings">₪0.00</span>
         </div>
         <div class="card available">
@@ -211,7 +211,7 @@
     let mode = 'weekly';
     const DOUBLE_LESSON_COST = 370;
     const MAASER_RATE = 0.10;
-    const SAVINGS_RATE = 0.14; 
+    const SAVINGS_RATE = 0.30; 
 
     function setMode(newMode) {
         mode = newMode;
@@ -228,6 +228,8 @@
     }
 
     function runCalc() {
+        let jobIncome = 0;
+        let bizIncome = 0;
         let totalIncome = 0;
         let available = 0;
         let maaser = 0;
@@ -236,18 +238,22 @@
         if (mode === 'weekly') {
             const hours = parseFloat(document.getElementById('weekly-hours').value) || 0;
             const wage = parseFloat(document.getElementById('weekly-wage').value) || 0;
-            totalIncome = hours * wage;
+            jobIncome = hours * wage;
+            totalIncome = jobIncome; 
             
-            maaser = totalIncome * MAASER_RATE;
+            maaser = jobIncome * MAASER_RATE;
             savings = totalIncome * SAVINGS_RATE;
             available = totalIncome - maaser - savings;
         } else if (mode === 'monthly') {
-            const jobIncome = parseFloat(document.getElementById('monthly-job').value) || 0;
-            const bizIncome = parseFloat(document.getElementById('monthly-biz').value) || 0;
+            jobIncome = parseFloat(document.getElementById('monthly-job').value) || 0;
+            bizIncome = parseFloat(document.getElementById('monthly-biz').value) || 0;
             totalIncome = jobIncome + bizIncome;
             
-            maaser = totalIncome * MAASER_RATE;
+            // Logic check: Ma'aser is 10% of JOB income ONLY
+            maaser = jobIncome * MAASER_RATE;
+            // Savings is 30% of EVERYTHING (Job + Business)
             savings = totalIncome * SAVINGS_RATE;
+            
             available = totalIncome - maaser - savings;
         } else if (mode === 'total') {
             available = parseFloat(document.getElementById('total-amount').value) || 0;
